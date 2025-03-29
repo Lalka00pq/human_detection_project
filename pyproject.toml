@@ -5,5 +5,9 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiohttp>=3.11.14",
+    "fastapi[standard]>=0.115.12",
+    "pillow>=11.1.0",
     "torch>=2.6.0",
+    "ultralytics>=8.3.98",
 ]
