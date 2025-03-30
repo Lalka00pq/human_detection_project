@@ -100,7 +100,6 @@ async def inference(
             xmin, ymin, xmax, ymax = xyxy
             cls_obj = box.cls[0].item()
             class_name = detector_model.names[int(cls_obj)]
-            # Get keypoints for current detection
             current_keypoints = keypoints[i].xy[0].tolist() if keypoints is not None else []
             detected_objects.append(InferenceResult(
                 class_name=class_name,

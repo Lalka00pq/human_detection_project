@@ -14,7 +14,7 @@
 		"use_cuda": true
 	},
 	"classes_info": {
-		"classes": ["human", "wind/sup-board", "boat", "bouy", "sailboat", "kayak"]
+		"classes": ["Standing", "Sitting"]
 	},
 	"logging_params": {
 		"save_logs": true,

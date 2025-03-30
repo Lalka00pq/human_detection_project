@@ -34,7 +34,7 @@ class DetectorParams(BaseModel):
 class ClassesInfo(BaseModel):
     """Датакласс, описывающий названия классов"""
     classes_name: list = Field(
-        default=["human", "wind/sup-board", "boat", "bouy", "sailboat", "kayak"])
+        default=["Standing", "Sitting"])
 
 
 class ClassifierParams(BaseModel):

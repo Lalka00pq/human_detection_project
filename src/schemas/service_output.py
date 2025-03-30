@@ -17,12 +17,7 @@ class HealthCheck(BaseModel):
 
 class GetClassesOutput(BaseModel):
     """Датаконтракт выхода сервиса"""
-    classes: list = Field(default=["human",
-                                   "wind/sup-board",
-                                   "boat",
-                                   "bouy",
-                                   "sailboat",
-                                   "kayak"])
+    classes: list = Field(default=["Standing", "Sitting"])
     """Список классов"""
 
 
@@ -39,6 +34,7 @@ class InferenceResult(BaseModel):
     height: int
     """Высота"""
     keypoints: List[List[float]] | None = None
+    """Координаты ключевых точек"""
 
 
 # Классы для работы с изображением
