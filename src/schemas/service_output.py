@@ -38,20 +38,25 @@ class InferenceResult(BaseModel):
     """Ширина"""
     height: int
     """Высота"""
+    keypoints: List[List[float]] | None = None
 
 
+# Классы для работы с изображением
+# --------------------------------
+class DetectedAndClassifiedObject(BaseModel):
+    """ Датакласс данных которые будут возвращены сервисом (детекция и классификация) """
+    object_bbox: List[InferenceResult] | None
+    """ Координаты объекта """
+
+
+# Классы для работы с видео
+# --------------------------------
 class FrameDetection(BaseModel):
     """Модель для результата инференса кадра"""
     frame: int
     """Номер кадра"""
     detections: List[InferenceResult]
     """Детекции на кадре"""
-
-
-class DetectedAndClassifiedObject(BaseModel):
-    """ Датакласс данных которые будут возвращены сервисом (детекция и классификация) """
-    object_bbox: List[InferenceResult] | None
-    """ Координаты объекта """
 
 
 class DetectionAndClassificationVideodataOutput(BaseModel):
