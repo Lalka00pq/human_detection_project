@@ -21,9 +21,42 @@ class GetClassesOutput(BaseModel):
     """Список классов"""
 
 
-class Keypoint(BaseModel):
+class Keypoints_yolo_models(BaseModel):
     """Модель для ключевых точек"""
-    pass
+    nose: List[float] | None = None
+    """Координаты носа"""
+    left_eye: List[float] | None = None
+    """Координаты левого глаза"""
+    right_eye: List[float] | None = None
+    """Координаты правого глаза"""
+    left_ear: List[float] | None = None
+    """Координаты левого уха"""
+    right_ear: List[float] | None = None
+    """Координаты правого уха"""
+    left_shoulder: List[float] | None = None
+    """Координаты левого плеча"""
+    right_shoulder: List[float] | None = None
+    """Координаты правого плеча"""
+    left_elbow: List[float] | None = None
+    """Координаты левого локтя"""
+    right_elbow: List[float] | None = None
+    """Координаты правого локтя"""
+    left_wrist: List[float] | None = None
+    """Координаты левого запястья"""
+    right_wrist: List[float] | None = None
+    """Координаты правого запястья"""
+    left_hip: List[float] | None = None
+    """Координаты левого бедра"""
+    right_hip: List[float] | None = None
+    """Координаты правого бедра"""
+    left_knee: List[float] | None = None
+    """Координаты левого колена"""
+    right_knee: List[float] | None = None
+    """Координаты правого колена"""
+    left_ankle: List[float] | None = None
+    """Координаты левой лодыжки"""
+    right_ankle: List[float] | None = None
+    """Координаты правой лодыжки"""
 
 
 class InferenceResult(BaseModel):
