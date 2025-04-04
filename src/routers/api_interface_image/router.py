@@ -59,7 +59,7 @@ def preprocess_image(image_path: str) -> np.ndarray:
     summary="Выполняет инференс изображения."
 )
 async def inference(
-
+        # TODO: добавить на вход параметры для конфигурации модели
         image: UploadFile = File(...),
 ) -> DetectedAndClassifiedObject | None:
     """Метод для инференса изображения
@@ -83,6 +83,8 @@ async def inference(
     logger.info(
         f"Устройство для выполнения инференса - {device}"
     )
+    # TODO: добавить возможность выбора формата модели
+    # TODO: добавить возможность выбора конфигурации модели
     detector_model = ultralytics.YOLO(
         'src/models/detectors/yolo11n-pose.pt').to(device)
     image_for_detect = Image.open(
@@ -103,6 +105,7 @@ async def inference(
             class_name = np.random.choice([
                 "Standing", "Falling"])
             current_keypoints = keypoints[i].xy[0].tolist()
+            # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
             keypoints_yolo = Keypoints_yolo_models(
                 nose=current_keypoints[0],
                 left_eye=current_keypoints[1],
