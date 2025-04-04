@@ -71,7 +71,7 @@ class InferenceResult(BaseModel):
     """Ширина"""
     height: int
     """Высота"""
-    keypoints: List[List[float]] | None = None
+    keypoints: Keypoints_yolo_models | None = None
     """Координаты ключевых точек"""
 
 

@@ -15,7 +15,7 @@ import ultralytics
 # project
 from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
-from src.schemas.service_output import InferenceResult, DetectedAndClassifiedObject
+from src.schemas.service_output import InferenceResult, DetectedAndClassifiedObject, Keypoints_yolo_models
 logger = get_logger()
 
 service_config = r".\src\configs\service_config.json"
@@ -99,16 +99,36 @@ async def inference(
             xyxy = box.xyxy[0].tolist()
             xmin, ymin, xmax, ymax = xyxy
             cls_obj = box.cls[0].item()
-            class_name = detector_model.names[int(cls_obj)]
-            current_keypoints = keypoints[i].xy[0].tolist(
-            ) if keypoints is not None else []
+            # class_name = detector_model.names[int(cls_obj)]
+            class_name = np.random.choice([
+                "Standing", "Falling"])
+            current_keypoints = keypoints[i].xy[0].tolist()
+            keypoints_yolo = Keypoints_yolo_models(
+                nose=current_keypoints[0],
+                left_eye=current_keypoints[1],
+                right_eye=current_keypoints[2],
+                left_ear=current_keypoints[3],
+                right_ear=current_keypoints[4],
+                left_shoulder=current_keypoints[5],
+                right_shoulder=current_keypoints[6],
+                left_elbow=current_keypoints[7],
+                right_elbow=current_keypoints[8],
+                left_wrist=current_keypoints[9],
+                right_wrist=current_keypoints[10],
+                left_hip=current_keypoints[11],
+                right_hip=current_keypoints[12],
+                left_knee=current_keypoints[13],
+                right_knee=current_keypoints[14],
+                left_ankle=current_keypoints[15],
+                right_ankle=current_keypoints[16],
+            )
             detected_objects.append(InferenceResult(
                 class_name=class_name,
                 x=int(xmin + (xmax - xmin) / 2),
                 y=int(ymin + (ymax - ymin) / 2),
                 width=int(xmax - xmin),
                 height=int(ymax - ymin),
-                keypoints=current_keypoints,
+                keypoints=keypoints_yolo,
             ))
     if len(detected_objects) == 0:
         logger.info(
