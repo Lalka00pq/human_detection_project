@@ -14,9 +14,9 @@ if sys.platform.startswith("win"):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 app = FastAPI(
-    title="FastAPI detection and classification service",
+    title="FastAPI human falling detection",
     version="0.1.0",
-    description="Service for detection and classification of objects on images",
+    description="Service for detection human standing or falling",
     docs_url=None,
     redoc_url=None,
 )

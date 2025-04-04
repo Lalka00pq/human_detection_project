@@ -88,9 +88,9 @@ async def inference(
     image_for_detect = Image.open(
         io.BytesIO(image.file.read())).convert('RGB')
     detected_objects = []
-    
-    results = detector_model.predict(source=image_for_detect)
-    
+
+    results = detector_model.predict(source=image_for_detect, save=False)
+
     for result in results:
         boxes = result.boxes
         keypoints = result.keypoints
@@ -100,7 +100,8 @@ async def inference(
             xmin, ymin, xmax, ymax = xyxy
             cls_obj = box.cls[0].item()
             class_name = detector_model.names[int(cls_obj)]
-            current_keypoints = keypoints[i].xy[0].tolist() if keypoints is not None else []
+            current_keypoints = keypoints[i].xy[0].tolist(
+            ) if keypoints is not None else []
             detected_objects.append(InferenceResult(
                 class_name=class_name,
                 x=int(xmin + (xmax - xmin) / 2),

@@ -17,8 +17,13 @@ class HealthCheck(BaseModel):
 
 class GetClassesOutput(BaseModel):
     """Датаконтракт выхода сервиса"""
-    classes: list = Field(default=["Standing", "Sitting"])
+    classes: list = Field(default=["Standing", "Falling"])
     """Список классов"""
+
+
+class Keypoint(BaseModel):
+    """Модель для ключевых точек"""
+    pass
 
 
 class InferenceResult(BaseModel):
