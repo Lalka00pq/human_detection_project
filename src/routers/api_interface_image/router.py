@@ -54,12 +54,110 @@ def preprocess_image(image_path: str) -> np.ndarray:
     return input_batch.numpy()
 
 
+class ModelYolo:
+    def __init__(self, model_path: str = 'src/models/detectors/yolo11n-pose',
+                 device: str = 'cpu',
+                 model_type: str = 'pt') -> None:
+        self.device = device
+        self.model_name = model_path.split('/')[-1]
+        self.model_path = model_path + '.' + model_type
+        self.model = ultralytics.YOLO(self.model_path).to(self.device)
+        logger.info(
+            f"Модель {self.model_name} загружена и используется на устройстве {self.device}"
+        )
+
+    def change_device(self, device: str = 'cpu') -> None:
+        if device == 'cuda' and torch.cuda.is_available():
+            self.device = device
+            self.model = self.model.to(device)
+        elif device == 'cuda' and not torch.cuda.is_available():
+            logger.info(
+                "CUDA не доступна на устройстве. Используется CPU для выполнения инференса"
+            )
+            self.device = 'cpu'
+            self.model = self.model.to(device)
+        elif device == 'cpu':
+            self.device = device
+            self.model = self.model.to(device)
+        else:
+            raise ValueError(
+                f"Устройство {device} не поддерживается. Используйте 'cuda' или 'cpu'")
+        logger.info(
+            f"Модель {self.model_name} переведена на устройство {device}"
+        )
+
+    def predict(self, image: File):
+        """Метод для предсказания модели
+
+        Args:
+            image_path (File): Загруженный файл
+
+        Returns:
+            Keypoints_yolo_models: Ключевые точки модели
+        """
+        image_for_detect = Image.open(
+            io.BytesIO(image.file.read())).convert('RGB')
+        results = self.model.predict(source=image_for_detect, save=False)
+        return results
+
+    def get_points(self, results: ultralytics.YOLO) -> list | None:
+        detected_objects = []
+        for result in results:
+            boxes = result.boxes
+            keypoints = result.keypoints
+            for i in range(len(boxes)):
+                box = boxes[i]
+                xyxy = box.xyxy[0].tolist()
+                xmin, ymin, xmax, ymax = xyxy
+                cls_obj = box.cls[0].item()
+                # class_name = detector_model.names[int(cls_obj)]
+                class_name = np.random.choice([
+                    "Standing", "Falling"])
+                current_keypoints = keypoints[i].xy[0].tolist()
+                # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
+                keypoints_yolo = Keypoints_yolo_models(
+                    nose=current_keypoints[0],
+                    left_eye=current_keypoints[1],
+                    right_eye=current_keypoints[2],
+                    left_ear=current_keypoints[3],
+                    right_ear=current_keypoints[4],
+                    left_shoulder=current_keypoints[5],
+                    right_shoulder=current_keypoints[6],
+                    left_elbow=current_keypoints[7],
+                    right_elbow=current_keypoints[8],
+                    left_wrist=current_keypoints[9],
+                    right_wrist=current_keypoints[10],
+                    left_hip=current_keypoints[11],
+                    right_hip=current_keypoints[12],
+                    left_knee=current_keypoints[13],
+                    right_knee=current_keypoints[14],
+                    left_ankle=current_keypoints[15],
+                    right_ankle=current_keypoints[16],
+                )
+                detected_objects.append(InferenceResult(
+                    class_name=class_name,
+                    x=int(xmin + (xmax - xmin) / 2),
+                    y=int(ymin + (ymax - ymin) / 2),
+                    width=int(xmax - xmin),
+                    height=int(ymax - ymin),
+                    keypoints=keypoints_yolo,
+                ))
+        if len(detected_objects) == 0:
+            logger.info(
+                "Объекты на изображении не обнаружены"
+            )
+            return None
+
+        return detected_objects
+
+
 @router.post(
     "/inference",
     summary="Выполняет инференс изображения."
 )
 async def inference(
-        # TODO: добавить на вход параметры для конфигурации модели
+        model_path: str = service_config_python.detectors_params.detector_model_path,
+        model_type: str = service_config_python.detectors_params.detector_model_format,
         image: UploadFile = File(...),
 ) -> DetectedAndClassifiedObject | None:
     """Метод для инференса изображения
@@ -70,72 +168,19 @@ async def inference(
     Returns:
         InferenceResult: Результат инференса
     """
-    # Определение устройства (cuda или cpu) для выполнения инференса
-    if torch.cuda.is_available():
-        device = 'cuda'
-    elif not torch.cuda.is_available():
-        logger.info(
-            "CUDA не доступна на устройстве. Используется CPU для выполнения инференса"
-        )
-        device = 'cpu'
-    else:
-        device = 'cpu'
-    logger.info(
-        f"Устройство для выполнения инференса - {device}"
+    model = ModelYolo(
+        model_path=model_path,
+        device='cuda' if torch.cuda.is_available() else 'cpu',
+        model_type=model_type
     )
-    # TODO: добавить возможность выбора формата модели
-    # TODO: добавить возможность выбора конфигурации модели
-    detector_model = ultralytics.YOLO(
-        'src/models/detectors/yolo11n-pose.pt').to(device)
-    image_for_detect = Image.open(
-        io.BytesIO(image.file.read())).convert('RGB')
-    detected_objects = []
+    model.change_device(device=model.device)
 
-    results = detector_model.predict(source=image_for_detect, save=False)
+    results = model.predict(image=image)
 
-    for result in results:
-        boxes = result.boxes
-        keypoints = result.keypoints
-        for i in range(len(boxes)):
-            box = boxes[i]
-            xyxy = box.xyxy[0].tolist()
-            xmin, ymin, xmax, ymax = xyxy
-            cls_obj = box.cls[0].item()
-            # class_name = detector_model.names[int(cls_obj)]
-            class_name = np.random.choice([
-                "Standing", "Falling"])
-            current_keypoints = keypoints[i].xy[0].tolist()
-            # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
-            keypoints_yolo = Keypoints_yolo_models(
-                nose=current_keypoints[0],
-                left_eye=current_keypoints[1],
-                right_eye=current_keypoints[2],
-                left_ear=current_keypoints[3],
-                right_ear=current_keypoints[4],
-                left_shoulder=current_keypoints[5],
-                right_shoulder=current_keypoints[6],
-                left_elbow=current_keypoints[7],
-                right_elbow=current_keypoints[8],
-                left_wrist=current_keypoints[9],
-                right_wrist=current_keypoints[10],
-                left_hip=current_keypoints[11],
-                right_hip=current_keypoints[12],
-                left_knee=current_keypoints[13],
-                right_knee=current_keypoints[14],
-                left_ankle=current_keypoints[15],
-                right_ankle=current_keypoints[16],
-            )
-            detected_objects.append(InferenceResult(
-                class_name=class_name,
-                x=int(xmin + (xmax - xmin) / 2),
-                y=int(ymin + (ymax - ymin) / 2),
-                width=int(xmax - xmin),
-                height=int(ymax - ymin),
-                keypoints=keypoints_yolo,
-            ))
-    if len(detected_objects) == 0:
-        logger.info(
-            "Объекты на изображении не обнаружены"
-        )
+    detected_objects = model.get_points(results=results)
+    if detected_objects is None:
         return DetectedAndClassifiedObject(object_bbox=None)
     return DetectedAndClassifiedObject(object_bbox=detected_objects)
+
+    # TODO: добавить возможность выбора формата модели
+    # TODO: добавить возможность выбора конфигурации модели

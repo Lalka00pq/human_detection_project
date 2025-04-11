@@ -23,9 +23,10 @@ class CommonParams(BaseModel):
 
 class DetectorParams(BaseModel):
     """Датакласс, описывающий параметры детектора"""
-    detector_name: str = Field(default="yolo11m")
+    detector_name: str = Field(default="yolo11n-pose")
     detector_model_format: str = Field(default="pt")
-    detector_model_path: str = Field(default="./src/models/detectors/yolo11m")
+    detector_model_path: str = Field(
+        default="./src/models/detectors/yolo11n-pose")
     confidence_thershold: float = Field(default=0.25)
     nms_threshold: float = Field(default=0.5)
     use_cuda: bool = Field(default=True)
@@ -37,21 +38,19 @@ class ClassesInfo(BaseModel):
         default=["Standing", "Falling"])
 
 
-class ClassifierParams(BaseModel):
-    """Датакласс, описывающий параметры классификатора"""
-    classifier_name: str = Field(default="resnet18")
-    classifier_model_format: str = Field(default="onnx")
-    classifier_model_path: str = Field(
-        default="./src/models/classifiers/resnet18")
-    use_cuda: bool = Field(default=True)
+# class ClassifierParams(BaseModel):
+#     """Датакласс, описывающий параметры классификатора"""
+#     classifier_name: str = Field(default="resnet18")
+#     classifier_model_format: str = Field(default="onnx")
+#     classifier_model_path: str = Field(
+#         default="./src/models/classifiers/resnet18")
+#     use_cuda: bool = Field(default=True)
 
 
 class ServiceConfig(BaseModel):
     """Конфигурация сервиса"""
     detectors_params: DetectorParams = Field(default=DetectorParams())
     """Параметры детектора"""
-    classifiers_params: ClassifierParams = Field(default=ClassifierParams())
-    """Параметры классификатора"""
     classes_info: ClassesInfo = Field(default=ClassesInfo())
     """Названия классов"""
     logging_params: LoggingParams = Field(default=LoggingParams())
