@@ -61,7 +61,8 @@ class ModelYolo:
         self.device = device
         self.model_name = model_path.split('/')[-1]
         self.model_path = model_path + '.' + model_type
-        self.model = ultralytics.YOLO(self.model_path).to(self.device)
+        self.model = ultralytics.YOLO(self.model_path)
+        self.model_type = model_type
         logger.info(
             f"Модель {self.model_name} загружена и используется на устройстве {self.device}"
         )
@@ -97,7 +98,10 @@ class ModelYolo:
         """
         image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB')
-        results = self.model.predict(source=image_for_detect, save=False)
+        if self.model_type == 'onnx':
+            results = self.model(image_for_detect, device=self.device)
+        elif self.model_type == 'pt':
+            results = self.model.predict(source=image_for_detect, save=False)
         return results
 
     def get_points(self, results: ultralytics.YOLO) -> list | None:
@@ -142,6 +146,9 @@ class ModelYolo:
                     height=int(ymax - ymin),
                     keypoints=keypoints_yolo,
                 ))
+                logger.info(
+                    f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax})"
+                )
         if len(detected_objects) == 0:
             logger.info(
                 "Объекты на изображении не обнаружены"
@@ -173,7 +180,7 @@ async def inference(
         device='cuda' if torch.cuda.is_available() else 'cpu',
         model_type=model_type
     )
-    model.change_device(device=model.device)
+    # model.change_device(device=model.device)
 
     results = model.predict(image=image)
 
