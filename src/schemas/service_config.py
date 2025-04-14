@@ -26,7 +26,7 @@ class DetectorParams(BaseModel):
     detector_name: str = Field(default="yolo11n-pose")
     detector_model_format: str = Field(default="pt")
     detector_model_path: str = Field(
-        default="./src/models/detectors/yolo11n-pose")
+        default="./src/models/detectors/trained models/yolo11n-pose")
     confidence_thershold: float = Field(default=0.25)
     nms_threshold: float = Field(default=0.5)
     use_cuda: bool = Field(default=True)

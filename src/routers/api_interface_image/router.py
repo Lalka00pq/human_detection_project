@@ -55,7 +55,7 @@ def preprocess_image(image_path: str) -> np.ndarray:
 
 
 class ModelYolo:
-    def __init__(self, model_path: str = 'src/models/detectors/yolo11n-pose',
+    def __init__(self, model_path: str = 'src/models/detectors/trained models/yolo11n-pose',
                  device: str = 'cpu',
                  model_type: str = 'pt') -> None:
         self.device = device
@@ -114,9 +114,7 @@ class ModelYolo:
                 xyxy = box.xyxy[0].tolist()
                 xmin, ymin, xmax, ymax = xyxy
                 cls_obj = box.cls[0].item()
-                # class_name = detector_model.names[int(cls_obj)]
-                class_name = np.random.choice([
-                    "Standing", "Falling"])
+                class_name = self.model.names[int(cls_obj)]
                 current_keypoints = keypoints[i].xy[0].tolist()
                 # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
                 keypoints_yolo = Keypoints_yolo_models(
