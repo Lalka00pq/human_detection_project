@@ -8,7 +8,7 @@ from PIL import Image
 from pydantic import TypeAdapter
 
 import torch
-from torchvision import transforms
+
 import ultralytics
 
 
@@ -32,26 +32,26 @@ service_config_python = service_config_adapter.validate_python(
 router = APIRouter(tags=["Main FastAPI service router"], prefix="")
 
 
-def preprocess_image(image_path: str) -> np.ndarray:
-    """Предобработка изображения для классификатора
+# def preprocess_image(image_path: str) -> np.ndarray:
+#     """Предобработка изображения для классификатора
 
-    Args:
-        image_path (str): Путь к изображению
+#     Args:
+#         image_path (str): Путь к изображению
 
-    Returns:
-        np.ndarray: массив изображения
-    """
-    input_image = Image.open(image_path).convert('RGB')
-    preprocess = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
-                             0.229, 0.224, 0.225]),
-    ])
-    input_tensor = preprocess(input_image)
-    input_batch = input_tensor.unsqueeze(0)
-    return input_batch.numpy()
+#     Returns:
+#         np.ndarray: массив изображения
+#     """
+#     input_image = Image.open(image_path).convert('RGB')
+#     preprocess = transforms.Compose([
+#         transforms.Resize(256),
+#         transforms.CenterCrop(224),
+#         transforms.ToTensor(),
+#         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[
+#                              0.229, 0.224, 0.225]),
+#     ])
+#     input_tensor = preprocess(input_image)
+#     input_batch = input_tensor.unsqueeze(0)
+#     return input_batch.numpy()
 
 
 class ModelYolo:
@@ -97,11 +97,11 @@ class ModelYolo:
             Keypoints_yolo_models: Ключевые точки модели
         """
         image_for_detect = Image.open(
-            io.BytesIO(image.file.read())).convert('RGB')
+            io.BytesIO(image.file.read())).convert('RGB').resize((640, 640))
         if self.model_type == 'onnx':
             results = self.model(image_for_detect, device=self.device)
         elif self.model_type == 'pt':
-            results = self.model.predict(source=image_for_detect, save=False)
+            results = self.model.predict(source=image_for_detect, save=True)
         return results
 
     def get_points(self, results: ultralytics.YOLO) -> list | None:
@@ -187,5 +187,4 @@ async def inference(
         return DetectedAndClassifiedObject(object_bbox=None)
     return DetectedAndClassifiedObject(object_bbox=detected_objects)
 
-    # TODO: добавить возможность выбора формата модели
     # TODO: добавить возможность выбора конфигурации модели

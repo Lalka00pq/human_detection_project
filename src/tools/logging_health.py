@@ -9,7 +9,7 @@ logger = get_logger()
 
 
 class HealthMonitor:
-    def __init__(self, base_url: str, check_interval: int = 20) -> None:
+    def __init__(self, base_url: str, check_interval: int = 60) -> None:
         """
         Инициализация монитора сервиса
 
