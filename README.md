@@ -22,6 +22,7 @@
     git clone https://github.com/Lalka00pq/human_detection_project
     ```
 2) В папке проекта создайте виртуальное окружение 
+   
    Для Windows:
    - Через `pip`
    ```powershell
@@ -41,13 +42,14 @@
     uv venv .venv
     ```
     Активируйте окружение:
+
     Для Windows:
     ```powershell
-        .venv/Scripts/activate
+    .venv/Scripts/activate
     ```
     Для Linux/MacOS:
     ```bash
-        source .venv/bin/activate
+    source .venv/bin/activate
     ```
 3) Установите все зависимости в виртуальное окружение
    - Через `pip` (для Linux/MacOS `pip3`)
