@@ -23,10 +23,10 @@ class CommonParams(BaseModel):
 
 class DetectorParams(BaseModel):
     """Датакласс, описывающий параметры детектора"""
-    detector_name: str = Field(default="yolo11n-pose")
+    detector_name: str = Field(default="yolo11m-pose")
     detector_model_format: str = Field(default="pt")
     detector_model_path: str = Field(
-        default="./src/models/detectors/trained models/yolo11n-pose")
+        default="./src/models/detectors/trained models/yolo11m-pose")
     confidence_thershold: float = Field(default=0.25)
     nms_threshold: float = Field(default=0.5)
     use_cuda: bool = Field(default=True)
@@ -36,15 +36,6 @@ class ClassesInfo(BaseModel):
     """Датакласс, описывающий названия классов"""
     classes_name: list = Field(
         default=["Standing", "Falling"])
-
-
-# class ClassifierParams(BaseModel):
-#     """Датакласс, описывающий параметры классификатора"""
-#     classifier_name: str = Field(default="resnet18")
-#     classifier_model_format: str = Field(default="onnx")
-#     classifier_model_path: str = Field(
-#         default="./src/models/classifiers/resnet18")
-#     use_cuda: bool = Field(default=True)
 
 
 class ServiceConfig(BaseModel):

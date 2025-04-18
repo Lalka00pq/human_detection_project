@@ -7,12 +7,6 @@
 		"nms_threshold": 0.5,
 		"use_cuda": true
 	},
-	"classifier_params": {
-		"classifier_name": "resnet18",
-		"classifier_model_format": "onnx",
-		"classifier_model_path": "./src/models/classifiers/resnet18",
-		"use_cuda": true
-	},
 	"classes_info": {
 		"classes": ["Standing", "Sitting"]
 	},

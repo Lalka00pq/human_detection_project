@@ -56,16 +56,30 @@ def preprocess_image(image_path: str) -> np.ndarray:
 
 class ModelYolo:
     # TODO: добавить возможность выбора конфигурации модели
-    def __init__(self, model_path: str = 'src/models/detectors/trained models/yolo11n-pose',
+    def __init__(self, model_path: str = service_config_python.detectors_params.detector_model_path,
                  device: str = 'cpu',
-                 model_type: str = 'pt') -> None:
+                 model_type: str = service_config_python.detectors_params.detector_model_format,
+                 confidence: float = service_config_python.detectors_params.confidence_thershold) -> None:
         self.device = device
         self.model_name = model_path.split('/')[-1]
         self.model_path = model_path + '.' + model_type
         self.model = ultralytics.YOLO(self.model_path)
         self.model_type = model_type
+        self.confidence = confidence
+        self.iou = service_config_python.detectors_params.nms_threshold
         logger.info(
             f"Модель {self.model_name} загружена и используется на устройстве {self.device}"
+        )
+
+    def set_model_confidence(self, confidence: float) -> None:
+        """Устанавливает уровень уверенности модели
+
+        Args:
+            confidence (float): _description_
+        """
+        self.model.conf = confidence
+        logger.info(
+            f"Уровень уверенности модели {self.model_name} установлен на {confidence}"
         )
 
     def change_device(self, device: str = 'cpu') -> None:
@@ -74,7 +88,7 @@ class ModelYolo:
             self.model = self.model.to(device)
         elif device == 'cuda' and not torch.cuda.is_available():
             logger.info(
-                "CUDA не доступна на устройстве. Используется CPU для выполнения инференса"
+                "CUDA не доступна на устройстве. Используется CPU для выполнения детекции объектов."
             )
             self.device = 'cpu'
             self.model = self.model.to(device)
@@ -88,7 +102,7 @@ class ModelYolo:
             f"Модель {self.model_name} переведена на устройство {device}"
         )
 
-    def predict(self, image: File):
+    def predict(self, image: File, conf: float = 0.25) -> ultralytics.YOLO:
         """Метод для предсказания модели
 
         Args:
@@ -100,9 +114,11 @@ class ModelYolo:
         image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB').resize((640, 640))
         if self.model_type == 'onnx':
-            results = self.model(image_for_detect, device=self.device)
+            results = self.model(
+                image_for_detect, device=self.device, conf=conf)
         elif self.model_type == 'pt':
-            results = self.model.predict(source=image_for_detect, save=True)
+            results = self.model.predict(
+                source=image_for_detect, save=False, conf=conf)
         return results
 
     def get_points(self, results: ultralytics.YOLO) -> list | None:
@@ -146,7 +162,8 @@ class ModelYolo:
                     keypoints=keypoints_yolo,
                 ))
                 logger.info(
-                    f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax})"
+                    f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
+                          с вероятностью {box.conf[0].item()}"
                 )
         if len(detected_objects) == 0:
             logger.info(
@@ -164,6 +181,7 @@ class ModelYolo:
 async def inference(
         model_path: str = service_config_python.detectors_params.detector_model_path,
         model_type: str = service_config_python.detectors_params.detector_model_format,
+        confidence: float = service_config_python.detectors_params.confidence_thershold,
         image: UploadFile = File(...),
 ) -> DetectedAndClassifiedObject | None:
     """Метод для инференса изображения
@@ -177,11 +195,12 @@ async def inference(
     model = ModelYolo(
         model_path=model_path,
         device='cuda' if torch.cuda.is_available() else 'cpu',
-        model_type=model_type
+        model_type=model_type,
+        confidence=confidence,
     )
     # model.change_device(device=model.device)
 
-    results = model.predict(image=image)
+    results = model.predict(image=image, conf=confidence)
 
     detected_objects = model.get_points(results=results)
     if detected_objects is None:
