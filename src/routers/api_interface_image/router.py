@@ -98,7 +98,7 @@ class ModelYolo:
             Keypoints_yolo_models: Ключевые точки модели
         """
         image_for_detect = Image.open(
-            io.BytesIO(image.file.read())).convert('RGB')
+            io.BytesIO(image.file.read())).convert('RGB').resize((640, 640))
         if self.model_type == 'onnx':
             results = self.model(image_for_detect, device=self.device)
         elif self.model_type == 'pt':
