@@ -7,7 +7,7 @@ from fastapi import APIRouter, status
 # project
 from src.schemas.service_output import HealthCheck
 
-router = APIRouter(tags=["Info"])
+router = APIRouter(tags=["Health Check"])
 
 
 @router.get(

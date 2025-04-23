@@ -1,6 +1,6 @@
 import requests
 
-
+# TODO: Переделать т.к логика поменялась
 health_responce = requests.get("http://127.0.0.1:8000/health")
 print(health_responce.json())
 

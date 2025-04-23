@@ -93,7 +93,7 @@ class FrameDetection(BaseModel):
     """Детекции на кадре"""
 
 
-class DetectionAndClassificationVideodataOutput(BaseModel):
+class DetectionVideodataOutput(BaseModel):
     """Датаконтракт выхода сервиса"""
     objects: List[FrameDetection]
     """Список объектов"""
