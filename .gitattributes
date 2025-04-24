@@ -10,3 +10,4 @@
 *.pth filter=lfs diff=lfs merge=lfs -text
 *.m text working-tree-encoding=Windows-1251
 *.pkl filter=lfs diff=lfs merge=lfs -text
+*.pt filter=lfs diff=lfs merge=lfs -text
