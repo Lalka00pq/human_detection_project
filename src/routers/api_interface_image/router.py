@@ -54,10 +54,10 @@ async def inference(
     """Метод для инференса изображения
 
     Args:
-        model_path (str, optional): Путь до модели. Defaults to service_config_python.detectors_params.detector_model_path.
-        model_type (str, optional): Формат модели. Defaults to service_config_python.detectors_params.detector_model_format.
-        confidence (float, optional): Уверенность в детекции. Defaults to service_config_python.detectors_params.confidence_thershold.
-        image (UploadFile, optional): Изображение для детекции. Defaults to File(...).
+        model_path (str): Путь до модели.
+        model_type (str): Формат модели.
+        confidence (float): Уверенность в детекции.
+        image (UploadFile): Изображение для детекции. 
 
     Returns:
         DetectedAndClassifiedObject | None: Pydantic модель объектов, обнаруженных на изображении.

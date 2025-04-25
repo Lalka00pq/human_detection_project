@@ -70,4 +70,9 @@
     python -m src.service –log_config=\log_config.yaml\
     ``` 
 5) Сервер начнет работу
+   
+   Для проверки работы сервиса можно использовать файл `client.py`.
+   ```bash
+   python "./src/client.py"
+   ```
 ---
