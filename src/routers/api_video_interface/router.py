@@ -1,34 +1,17 @@
-# python
-import json
-# 3rdparty
-import numpy as np
-from fastapi import APIRouter, File, UploadFile
-from PIL import Image
-from pydantic import TypeAdapter
-
-import torch
-from torchvision import transforms
-
-
 # project
 from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
-from src.schemas.service_output import FrameDetection, DetectionVideodataOutput
-from src.routers.api_interface_image.router import ModelYolo
+from src.schemas.service_output import DetectionVideodataOutput
+from src.routers.yolo_model_class import ModelYolo
+# 3rdparty
+from fastapi import APIRouter, File, UploadFile
+import torch
 logger = get_logger()
 
-service_config = r".\src\configs\service_config.json"
+service_config_python = ServiceConfig.from_json_file(
+    '.\src\configs\service_config.json')
 
-with open(service_config, "r") as json_service_config:
-    service_config_dict = json.load(json_service_config)
-
-logger.info(f"Конфигурация сервиса: {service_config}")
-
-service_config_adapter = TypeAdapter(ServiceConfig)
-service_config_python = service_config_adapter.validate_python(
-    service_config_dict)
-
-router = APIRouter(tags=["Detection Interfaces"], prefix="")
+router = APIRouter(tags=["Detection Inferences"], prefix="")
 
 
 @router.post(
@@ -44,13 +27,13 @@ async def inference(
     """Выполнение детекции на видео
 
     Args:
-        model_path (str, optional): Путь к модели. Defaults to service_config_python.detectors_params.detector_model_path.
-        model_type (str, optional): Формат модели (pt или onnx). Defaults to service_config_python.detectors_params.detector_model_format.
-        confidence (float, optional): Уверенность при детекции. Defaults to service_config_python.detectors_params.confidence_thershold.
-        video (UploadFile, optional): Видео. Defaults to File(...).
+        model_path (str): Путь к модели.
+        model_type (str): Формат модели (pt или onnx).
+        confidence (float): Уверенность при детекции.
+        video (UploadFile): Видео для детекции.
 
     Returns:
-        DetectedAndClassifiedObject | None: _description_
+        DetectedAndClassifiedObject | None: Pydantic модель объектов, обнаруженных на изображении.
     """
     model = ModelYolo(
         model_path=model_path,

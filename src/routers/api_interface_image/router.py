@@ -1,38 +1,22 @@
-# python
-import json
-import io
-import os
-import shutil
+# project
+from src.schemas.service_config import ServiceConfig
+from src.tools.logging_tools import get_logger
+from src.schemas.service_output import DetectedAndClassifiedObject
+from src.routers.yolo_model_class import ModelYolo
 # 3rdparty
 import numpy as np
 from fastapi import APIRouter, File, UploadFile
 from PIL import Image
-from pydantic import TypeAdapter
-import cv2
 
 import torch
 from torchvision import transforms
-import ultralytics
 
-
-# project
-from src.schemas.service_config import ServiceConfig
-from src.tools.logging_tools import get_logger
-from src.schemas.service_output import InferenceResult, DetectedAndClassifiedObject, Keypoints_yolo_models, FrameDetection
 logger = get_logger()
 
-service_config = r".\src\configs\service_config.json"
+service_config_python = ServiceConfig.from_json_file(
+    '.\src\configs\service_config.json')
 
-with open(service_config, "r") as json_service_config:
-    service_config_dict = json.load(json_service_config)
-
-logger.info(f"Конфигурация сервиса: {service_config}")
-
-service_config_adapter = TypeAdapter(ServiceConfig)
-service_config_python = service_config_adapter.validate_python(
-    service_config_dict)
-
-router = APIRouter(tags=["Detection Interfaces"], prefix="")
+router = APIRouter(tags=["Detection Inferences"], prefix="")
 
 
 def preprocess_image(image_path: str) -> np.ndarray:
@@ -57,222 +41,8 @@ def preprocess_image(image_path: str) -> np.ndarray:
     return input_batch.numpy()
 
 
-class ModelYolo:
-    """Класс моделей YOLO"""
-
-    def __init__(self, model_path: str = service_config_python.detectors_params.detector_model_path,
-                 device: str = 'cpu',
-                 model_type: str = service_config_python.detectors_params.detector_model_format,
-                 confidence: float = service_config_python.detectors_params.confidence_thershold) -> None:
-        """Инициализация модели YOLO
-
-        Args:
-            model_path (str, optional): Путь до модели. Defaults to service_config_python.detectors_params.detector_model_path.
-            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). Defaults to 'cpu'.
-            model_type (str, optional): Формат модели. Defaults to service_config_python.detectors_params.detector_model_format.
-            confidence (float, optional): Уверенность в детекции. Defaults to service_config_python.detectors_params.confidence_thershold.
-        """
-        self.device = device
-        self.model_name = model_path.split('/')[-1]
-        self.model_path = model_path + '.' + model_type
-        self.model = ultralytics.YOLO(self.model_path)
-        self.model_type = model_type
-        self.confidence = confidence
-        self.iou = service_config_python.detectors_params.nms_threshold
-        logger.info(
-            f"Модель {self.model_name} загружена и используется на устройстве {self.device}"
-        )
-
-    def set_model_confidence(self, confidence: float) -> None:
-        """Устанавливает уровень уверенности модели
-
-        Args:
-            confidence (float): Уверенность модели
-
-        Returns:
-            None
-        """
-        self.model.conf = confidence
-        logger.info(
-            f"Уровень уверенности модели {self.model_name} установлен на {confidence}"
-        )
-
-    def change_device(self, device: str = 'cpu') -> None:
-        """Метод для изменения устройства модели
-
-        Args:
-            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). Defaults to 'cpu'.
-
-        Returns:
-            None
-
-        Raises:
-            ValueError: Если устройство не поддерживается 
-        """
-        if device == 'cuda' and torch.cuda.is_available():
-            self.device = device
-            self.model = self.model.to(device)
-        elif device == 'cuda' and not torch.cuda.is_available():
-            logger.info(
-                "CUDA не доступна на устройстве. Используется CPU для выполнения детекции объектов."
-            )
-            self.device = 'cpu'
-            self.model = self.model.to(device)
-        elif device == 'cpu':
-            self.device = device
-            self.model = self.model.to(device)
-        else:
-            raise ValueError(
-                f"Устройство {device} не поддерживается. Используйте 'cuda' или 'cpu'")
-        logger.info(
-            f"Модель {self.model_name} переведена на устройство {device}"
-        )
-
-    def predict(self, image: File, conf: float = 0.25) -> ultralytics.YOLO:
-        """Метод для предсказания модели
-
-        Args:
-            image_path (File): Загруженный файл
-
-        Returns:
-            Keypoints_yolo_models: Ключевые точки модели
-        """
-        image_for_detect = Image.open(
-            io.BytesIO(image.file.read())).convert('RGB').resize((640, 640))
-        if self.model_type == 'onnx':
-            results = self.model(
-                image_for_detect, device=self.device, conf=conf)
-        elif self.model_type == 'pt':
-            results = self.model.predict(
-                source=image_for_detect, save=False, conf=conf)
-        return results
-
-    def load_video(self, video: UploadFile) -> str:
-        video_path = f"temp_{video.filename}"
-        with open(video_path, "wb") as buffer:
-            shutil.copyfileobj(video.file, buffer)
-        return video_path
-
-    def video_detection(self, path_to_video: str) -> list | None:
-        cap = cv2.VideoCapture(path_to_video)
-        if not cap.isOpened():
-            logger.error("Не удалось открыть видеофайл")
-            return None
-        frames = []
-        frame_id = 0
-        while cap.isOpened():
-            ret, frame = cap.read()
-            if not ret:
-                break
-            detection = self.model.predict(
-                frame, device=self.device, conf=self.confidence, iou=self.iou)
-            frame_result = []
-            for row in detection:
-                boxes = row.boxes
-                keypoints = row.keypoints
-                for i in range(len(boxes)):
-                    box = boxes[i]
-                    xyxy = box.xyxy[0].tolist()
-                    xmin, ymin, xmax, ymax = xyxy
-                    cls_obj = box.cls[0].item()
-                    class_name = self.model.names[int(cls_obj)]
-                    current_keypoints = keypoints[i].xy[0].tolist()
-                    keypoints_yolo = Keypoints_yolo_models(
-                        nose=current_keypoints[0],
-                        left_eye=current_keypoints[1],
-                        right_eye=current_keypoints[2],
-                        left_ear=current_keypoints[3],
-                        right_ear=current_keypoints[4],
-                        left_shoulder=current_keypoints[5],
-                        right_shoulder=current_keypoints[6],
-                        left_elbow=current_keypoints[7],
-                        right_elbow=current_keypoints[8],
-                        left_wrist=current_keypoints[9],
-                        right_wrist=current_keypoints[10],
-                        left_hip=current_keypoints[11],
-                        right_hip=current_keypoints[12],
-                        left_knee=current_keypoints[13],
-                        right_knee=current_keypoints[14],
-                        left_ankle=current_keypoints[15],
-                        right_ankle=current_keypoints[16],
-                    )
-                    frame_result.append(InferenceResult(
-                        class_name=class_name,
-                        x=int(xmin + (xmax - xmin) / 2),
-                        y=int(ymin + (ymax - ymin) / 2),
-                        width=int(xmax - xmin),
-                        height=int(ymax - ymin),
-                        keypoints=keypoints_yolo
-                    ))
-                    logger.info(
-                        f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
-                              с вероятностью {box.conf[0].item()}"
-                    )
-            frames.append(FrameDetection(
-                frame=frame_id, detections=frame_result))
-            frame_id += 1
-        cap.release()
-        os.remove(path_to_video)
-        logger.info(
-            "Видео обработано"
-        )
-        return frames
-
-    def get_points(self, results: ultralytics.YOLO) -> list | None:
-        detected_objects = []
-        for result in results:
-            boxes = result.boxes
-            keypoints = result.keypoints
-            for i in range(len(boxes)):
-                box = boxes[i]
-                xyxy = box.xyxy[0].tolist()
-                xmin, ymin, xmax, ymax = xyxy
-                cls_obj = box.cls[0].item()
-                class_name = self.model.names[int(cls_obj)]
-                current_keypoints = keypoints[i].xy[0].tolist()
-                # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
-                keypoints_yolo = Keypoints_yolo_models(
-                    nose=current_keypoints[0],
-                    left_eye=current_keypoints[1],
-                    right_eye=current_keypoints[2],
-                    left_ear=current_keypoints[3],
-                    right_ear=current_keypoints[4],
-                    left_shoulder=current_keypoints[5],
-                    right_shoulder=current_keypoints[6],
-                    left_elbow=current_keypoints[7],
-                    right_elbow=current_keypoints[8],
-                    left_wrist=current_keypoints[9],
-                    right_wrist=current_keypoints[10],
-                    left_hip=current_keypoints[11],
-                    right_hip=current_keypoints[12],
-                    left_knee=current_keypoints[13],
-                    right_knee=current_keypoints[14],
-                    left_ankle=current_keypoints[15],
-                    right_ankle=current_keypoints[16],
-                )
-                detected_objects.append(InferenceResult(
-                    class_name=class_name,
-                    x=int(xmin + (xmax - xmin) / 2),
-                    y=int(ymin + (ymax - ymin) / 2),
-                    width=int(xmax - xmin),
-                    height=int(ymax - ymin),
-                    keypoints=keypoints_yolo,
-                ))
-                logger.info(
-                    f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
-                          с вероятностью {box.conf[0].item()}"
-                )
-        if len(detected_objects) == 0:
-            logger.info(
-                "Объекты на изображении не обнаружены"
-            )
-            return None
-
-        return detected_objects
-
-
 @router.post(
-    "/inference",
+    "/image_inference",
     summary="Выполняет инференс изображения."
 )
 async def inference(
@@ -303,6 +73,7 @@ async def inference(
     results = model.predict(image=image, conf=confidence)
 
     detected_objects = model.get_points(results=results)
+
     if detected_objects is None:
         return DetectedAndClassifiedObject(object_bbox=None)
     return DetectedAndClassifiedObject(object_bbox=detected_objects)

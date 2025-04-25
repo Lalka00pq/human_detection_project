@@ -1,3 +1,7 @@
+# python
+import json
+from pathlib import Path
+# 3rdparty
 from pydantic import BaseModel, Field
 
 
@@ -23,10 +27,12 @@ class CommonParams(BaseModel):
 
 class DetectorParams(BaseModel):
     """Датакласс, описывающий параметры детектора"""
-    detector_name: str = Field(default="yolo11m-pose")
+    detector_name: str = Field(
+        default="yolo11x-pose-100epochs")
+
     detector_model_format: str = Field(default="pt")
     detector_model_path: str = Field(
-        default="./src/models/detectors/trained models/yolo11m-pose")
+        default="./src/models/detectors/trained models/yolo11x-pose-100epochs")
     confidence_thershold: float = Field(default=0.25)
     nms_threshold: float = Field(default=0.5)
     use_cuda: bool = Field(default=True)
@@ -48,3 +54,14 @@ class ServiceConfig(BaseModel):
     """Параметры логирования"""
     common_params: CommonParams = Field(default=CommonParams())
     """Общие настройки сервиса (хост, порт)"""
+
+    @classmethod
+    def from_json_file(cls, file_path: str | Path) -> "ServiceConfig":
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+        return cls(
+            detectors_params=DetectorParams(**data['detector_params']),
+            classes_info=ClassesInfo(**data['classes_info']),
+            logging_params=LoggingParams(**data['logging_params']),
+            common_params=CommonParams(**data['common_params']),
+        )
