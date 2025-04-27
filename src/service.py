@@ -43,7 +43,7 @@ class Server(uvicorn.Server):
 def get_service(
     service_config: ServiceConfig,
     num_workers: int = 0,
-    reload: bool = True,  # Если надо отключить перезагрузку, то передать False
+    reload: bool = False,  # Если надо отключить перезагрузку, то передать False
 ) -> Server:
     """Функция для инициализации FastAPI-сервиса в рамках uvicorn
 

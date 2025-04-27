@@ -9,7 +9,7 @@ import torch
 logger = get_logger()
 
 service_config_python = ServiceConfig.from_json_file(
-    '.\src\configs\service_config.json')
+    r'.\src\configs\service_config.json')
 
 router = APIRouter(tags=["Detection Inferences"], prefix="")
 
@@ -22,6 +22,7 @@ async def inference(
         model_path: str = service_config_python.detectors_params.detector_model_path,
         model_type: str = service_config_python.detectors_params.detector_model_format,
         confidence: float = service_config_python.detectors_params.confidence_thershold,
+        use_cuda: bool = service_config_python.detectors_params.use_cuda,
         video: UploadFile = File(...),
 ) -> DetectionVideodataOutput | None:
     """Выполнение детекции на видео
@@ -30,6 +31,7 @@ async def inference(
         model_path (str): Путь к модели.
         model_type (str): Формат модели (pt или onnx).
         confidence (float): Уверенность при детекции.
+        use_cuda (bool): Использовать ли GPU.
         video (UploadFile): Видео для детекции.
 
     Returns:
@@ -41,7 +43,10 @@ async def inference(
         model_type=model_type,
         confidence=confidence,
     )
-    # model.change_device(device=model.device)
+    if use_cuda:
+        model.change_device(
+            device='cuda')
+
     video_path = model.load_video(video=video)
     logger.info(f"Путь к видео: {video_path}")
     frames = model.video_detection(path_to_video=video_path)

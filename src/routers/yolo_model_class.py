@@ -26,10 +26,10 @@ class ModelYolo:
         """Инициализация модели YOLO
 
         Args:
-            model_path (str, optional): Путь до модели. Defaults to service_config_python.detectors_params.detector_model_path.
-            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). Defaults to 'cpu'.
-            model_type (str, optional): Формат модели. Defaults to service_config_python.detectors_params.detector_model_format.
-            confidence (float, optional): Уверенность в детекции. Defaults to service_config_python.detectors_params.confidence_thershold.
+            model_path (str, optional): Путь до модели.
+            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu').
+            model_type (str, optional): Формат модели. 
+            confidence (float, optional): Уверенность в детекции.
         """
         self.device = device
         self.model_name = model_path.split('/')[-1]
@@ -59,8 +59,7 @@ class ModelYolo:
         """Метод для изменения устройства модели
 
         Args:
-            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). Defaults to 'cpu'.
-
+            device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). 
         Returns:
             None
 
@@ -106,12 +105,27 @@ class ModelYolo:
         return results
 
     def load_video(self, video: UploadFile) -> str:
+        """Метод для загрузки видео
+        Args:
+            video (UploadFile): Видео файл
+
+        Returns:
+            str: Путь к видеофайлу
+        """
         video_path = f"temp_{video.filename}"
         with open(video_path, "wb") as buffer:
             shutil.copyfileobj(video.file, buffer)
         return video_path
 
     def video_detection(self, path_to_video: str) -> list | None:
+        """Метод для детекции объектов на видео
+
+        Args:
+            path_to_video (str): Путь к видео
+
+        Returns:
+            list | None: Список объектов, обнаруженных на видео
+        """
         cap = cv2.VideoCapture(path_to_video)
         if not cap.isOpened():
             logger.error("Не удалось открыть видеофайл")
@@ -177,6 +191,14 @@ class ModelYolo:
         return frames
 
     def get_points(self, results: YOLO) -> list | None:
+        """Метод для получения ключевых точек из результатов детекции
+
+        Args:
+            results (YOLO): Результаты детекции на изображении
+
+        Returns:
+            list | None: Список объектов, обнаруженных на изображении
+        """
         detected_objects = []
         for result in results:
             boxes = result.boxes

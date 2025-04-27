@@ -5,7 +5,7 @@
 		"detector_model_path": "./src/models/detectors/trained models/yolo11x-pose-100epochs",
 		"confidence_threshold": 0.25,
 		"nms_threshold": 0.5,
-		"use_cuda": true
+		"use_cuda": false
 	},
 	"classes_info": {
 		"classes_names": ["Standing person", "Fall person"]

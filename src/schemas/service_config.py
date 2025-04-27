@@ -35,7 +35,7 @@ class DetectorParams(BaseModel):
         default="./src/models/detectors/trained models/yolo11x-pose-100epochs")
     confidence_thershold: float = Field(default=0.25)
     nms_threshold: float = Field(default=0.5)
-    use_cuda: bool = Field(default=True)
+    use_cuda: bool = Field(default=False)
 
 
 class ClassesInfo(BaseModel):
