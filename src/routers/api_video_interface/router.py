@@ -5,7 +5,6 @@ from src.schemas.service_output import DetectionVideodataOutput
 from src.routers.yolo_model_class import ModelYolo
 # 3rdparty
 from fastapi import APIRouter, File, UploadFile
-import torch
 logger = get_logger()
 
 service_config_python = ServiceConfig.from_json_file(
@@ -39,7 +38,7 @@ async def inference(
     """
     model = ModelYolo(
         model_path=model_path,
-        device='cuda' if torch.cuda.is_available() else 'cpu',
+        device='cpu',
         model_type=model_type,
         confidence=confidence,
     )

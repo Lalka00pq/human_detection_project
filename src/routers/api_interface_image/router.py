@@ -6,7 +6,6 @@ from src.routers.yolo_model_class import ModelYolo
 
 # 3rdparty
 from fastapi import APIRouter, File, UploadFile
-import torch
 
 logger = get_logger()
 
