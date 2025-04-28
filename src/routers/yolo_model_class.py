@@ -126,6 +126,7 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на видео
         """
+        class_names = ['Standing', 'Lying']
         cap = cv2.VideoCapture(path_to_video)
         if not cap.isOpened():
             logger.error("Не удалось открыть видеофайл")
@@ -149,7 +150,7 @@ class ModelYolo:
                     xyxy = box.xyxy[0].tolist()
                     xmin, ymin, xmax, ymax = xyxy
                     cls_obj = box.cls[0].item()
-                    class_name = self.model.names[int(cls_obj)]
+                    class_name = class_names[int(cls_obj)]
                     current_keypoints = keypoints[i].xy[0].tolist()
                     keypoints_yolo = Keypoints_yolo_models(
                         nose=current_keypoints[0],
@@ -202,6 +203,7 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на изображении
         """
+        class_names = ['Standing', 'Lying']
         detected_objects = []
         for result in results:
             boxes = result.boxes
@@ -211,7 +213,7 @@ class ModelYolo:
                 xyxy = box.xyxy[0].tolist()
                 xmin, ymin, xmax, ymax = xyxy
                 cls_obj = box.cls[0].item()
-                class_name = self.model.names[int(cls_obj)]
+                class_name = class_names[int(cls_obj)]
                 current_keypoints = keypoints[i].xy[0].tolist()
                 # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
                 keypoints_yolo = Keypoints_yolo_models(
