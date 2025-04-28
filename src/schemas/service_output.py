@@ -63,6 +63,8 @@ class InferenceResult(BaseModel):
     """Модель для результата инференса изображения"""
     class_name: str
     """Имя класса"""
+    track_id: int | None = None
+    """Идентификатор объекта"""
     x: int
     """Координата x"""
     y: int

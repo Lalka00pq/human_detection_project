@@ -101,7 +101,7 @@ class ModelYolo:
                 image_for_detect, device=self.device, conf=conf)
         elif self.model_type == 'pt':
             results = self.model.predict(
-                source=image_for_detect, save=False, conf=conf)
+                source=image_for_detect, save=False, conf=conf, verbose=False)
         return results
 
     def load_video(self, video: UploadFile) -> str:
@@ -136,14 +136,16 @@ class ModelYolo:
             ret, frame = cap.read()
             if not ret:
                 break
-            detection = self.model.predict(
-                frame, device=self.device, conf=self.confidence)
+            detection = self.model.track(
+                frame, device=self.device, conf=self.confidence, verbose=False)
             frame_result = []
             for row in detection:
                 boxes = row.boxes
                 keypoints = row.keypoints
+                ids = row.boxes.id
                 for i in range(len(boxes)):
                     box = boxes[i]
+                    object_id = ids[i]
                     xyxy = box.xyxy[0].tolist()
                     xmin, ymin, xmax, ymax = xyxy
                     cls_obj = box.cls[0].item()
@@ -170,6 +172,7 @@ class ModelYolo:
                     )
                     frame_result.append(InferenceResult(
                         class_name=class_name,
+                        track_id=int(object_id),
                         x=int(xmin + (xmax - xmin) / 2),
                         y=int(ymin + (ymax - ymin) / 2),
                         width=int(xmax - xmin),
@@ -177,7 +180,7 @@ class ModelYolo:
                         keypoints=keypoints_yolo
                     ))
                     logger.info(
-                        f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
+                        f"Объект {class_name} c id {object_id} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
                               с вероятностью {box.conf[0].item()}"
                     )
             frames.append(FrameDetection(
