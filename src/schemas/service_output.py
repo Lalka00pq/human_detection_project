@@ -17,7 +17,7 @@ class HealthCheck(BaseModel):
 
 class GetClassesOutput(BaseModel):
     """Датаконтракт выхода сервиса"""
-    classes: list = Field(default=["Standing", "Falling"])
+    classes: list = Field(default=["Standing", "Lying"])
     """Список классов"""
 
 

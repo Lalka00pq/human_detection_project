@@ -2,9 +2,11 @@ from fastapi import APIRouter, Request
 from src.tools.logging_tools import get_logger
 from src.routers.yolo_model_class import ModelYolo
 import time
-
+from src.schemas.service_config import ServiceConfig
 router = APIRouter(tags=["Load Models"], prefix="")
 logger = get_logger()
+service_config_python = ServiceConfig.from_json_file(
+    r'.\src\configs\service_config.json')
 
 
 @router.post(
@@ -13,9 +15,9 @@ logger = get_logger()
 )
 async def load_model(
     request: Request,
-    model_path: str,
-    model_type: str,
-    confidence: float,
+    model_path: str = service_config_python.detectors_params.detector_model_path,
+    model_type: str = service_config_python.detectors_params.detector_model_format,
+    confidence: float = service_config_python.detectors_params.confidence_threshold,
 ):
     """ Метод для загрузки модели из файла.
 
