@@ -66,19 +66,15 @@ class ModelYolo:
         Raises:
             ValueError: Если устройство не поддерживается 
         """
-        # TODO: В данном месте лучше убрать перевод на устройство, т.к при работе с onnx выпадает ошибка
         if device == 'cuda' and torch.cuda.is_available():
             self.device = device
-            self.model = self.model.to(device)
         elif device == 'cuda' and not torch.cuda.is_available():
             logger.info(
                 "CUDA не доступна на устройстве. Используется CPU для выполнения детекции объектов."
             )
             self.device = 'cpu'
-            self.model = self.model.to(device)
         elif device == 'cpu':
             self.device = device
-            self.model = self.model.to(device)
         else:
             raise ValueError(
                 f"Устройство {device} не поддерживается. Используйте 'cuda' или 'cpu'")
@@ -99,10 +95,10 @@ class ModelYolo:
             io.BytesIO(image.file.read())).convert('RGB')
         if self.model_type == 'onnx':
             results = self.model(
-                image_for_detect, device=self.device, conf=conf)
+                image_for_detect, device=self.device, conf=conf, verbose=False)
         elif self.model_type == 'pt':
             results = self.model.predict(
-                source=image_for_detect, save=False, conf=conf, verbose=False)
+                source=image_for_detect, save=False, conf=conf, verbose=False, device=self.device)
         return results
 
     def load_video(self, video: UploadFile) -> str:
@@ -127,7 +123,7 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на видео
         """
-        frame_skip = 5
+        # frame_skip = 5
         class_names = ['Standing', 'Lying']
         cap = cv2.VideoCapture(path_to_video)
         if not cap.isOpened():
@@ -136,12 +132,13 @@ class ModelYolo:
         frames = []
         frame_id = 0
         while cap.isOpened():
+            cap.set(cv2.CAP_PROP_FPS, 10)
             ret, frame = cap.read()
             if not ret:
                 break
-            if frame_id % frame_skip != 0:
-                frame_id += 1
-                continue
+            # if frame_id % frame_skip != 0:
+            #     frame_id += 1
+            #     continue
             detection = self.model.predict(
                 frame, device=self.device, conf=self.confidence, verbose=False)
             frame_result = []
@@ -252,8 +249,8 @@ class ModelYolo:
                     keypoints=keypoints_yolo,
                 ))
                 logger.info(
-                    f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
-                          с вероятностью {box.conf[0].item()}"
+                    f"Состояние {class_name}. Координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
+                          Вероятностью {box.conf[0].item()}"
                 )
         if len(detected_objects) == 0:
             logger.info(
