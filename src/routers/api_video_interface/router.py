@@ -2,9 +2,10 @@
 from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
 from src.schemas.service_output import DetectionVideodataOutput
-from src.routers.yolo_model_class import ModelYolo
 # 3rdparty
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Request
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 logger = get_logger()
 
 service_config_python = ServiceConfig.from_json_file(
@@ -18,9 +19,7 @@ router = APIRouter(tags=["Detection Inferences"], prefix="")
     summary="Выполнение детекции на изображении"
 )
 async def inference(
-        model_path: str = service_config_python.detectors_params.detector_model_path,
-        model_type: str = service_config_python.detectors_params.detector_model_format,
-        confidence: float = service_config_python.detectors_params.confidence_thershold,
+        request: Request,
         use_cuda: bool = service_config_python.detectors_params.use_cuda,
         video: UploadFile = File(...),
 ) -> DetectionVideodataOutput | None:
@@ -36,18 +35,18 @@ async def inference(
     Returns:
         DetectedAndClassifiedObject | None: Pydantic модель объектов, обнаруженных на изображении.
     """
-    model = ModelYolo(
-        model_path=model_path,
-        device='cpu',
-        model_type=model_type,
-        confidence=confidence,
-    )
+    model = request.app.state.model
+    if model is None:
+        logger.error("Модель не загружена")
+        return None
+    logger.info(f"Используется модель {model.model_name}")
     if use_cuda:
         model.change_device(
             device='cuda')
 
     video_path = model.load_video(video=video)
     logger.info(f"Путь к видео: {video_path}")
+    # frames = await asyncio.to_thread(model.video_detection, video_path)
     frames = model.video_detection(path_to_video=video_path)
     logger.info(f"Количество кадров: {len(frames)}")
     return DetectionVideodataOutput(objects=frames)

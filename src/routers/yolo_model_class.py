@@ -66,6 +66,7 @@ class ModelYolo:
         Raises:
             ValueError: Если устройство не поддерживается 
         """
+        # TODO: В данном месте лучше убрать перевод на устройство, т.к при работе с onnx выпадает ошибка
         if device == 'cuda' and torch.cuda.is_available():
             self.device = device
             self.model = self.model.to(device)
@@ -95,13 +96,13 @@ class ModelYolo:
             Keypoints_yolo_models: Ключевые точки модели
         """
         image_for_detect = Image.open(
-            io.BytesIO(image.file.read())).convert('RGB').resize((640, 640))
+            io.BytesIO(image.file.read())).convert('RGB')
         if self.model_type == 'onnx':
             results = self.model(
                 image_for_detect, device=self.device, conf=conf)
         elif self.model_type == 'pt':
             results = self.model.predict(
-                source=image_for_detect, save=False, conf=conf)
+                source=image_for_detect, save=False, conf=conf, verbose=False)
         return results
 
     def load_video(self, video: UploadFile) -> str:
@@ -126,6 +127,8 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на видео
         """
+        frame_skip = 5
+        class_names = ['Standing', 'Lying']
         cap = cv2.VideoCapture(path_to_video)
         if not cap.isOpened():
             logger.error("Не удалось открыть видеофайл")
@@ -136,18 +139,23 @@ class ModelYolo:
             ret, frame = cap.read()
             if not ret:
                 break
+            if frame_id % frame_skip != 0:
+                frame_id += 1
+                continue
             detection = self.model.predict(
-                frame, device=self.device, conf=self.confidence)
+                frame, device=self.device, conf=self.confidence, verbose=False)
             frame_result = []
             for row in detection:
                 boxes = row.boxes
                 keypoints = row.keypoints
+                # ids = row.boxes.id
                 for i in range(len(boxes)):
                     box = boxes[i]
+                    # object_id = ids[i]
                     xyxy = box.xyxy[0].tolist()
                     xmin, ymin, xmax, ymax = xyxy
                     cls_obj = box.cls[0].item()
-                    class_name = self.model.names[int(cls_obj)]
+                    class_name = class_names[int(cls_obj)]
                     current_keypoints = keypoints[i].xy[0].tolist()
                     keypoints_yolo = Keypoints_yolo_models(
                         nose=current_keypoints[0],
@@ -170,18 +178,22 @@ class ModelYolo:
                     )
                     frame_result.append(InferenceResult(
                         class_name=class_name,
+                        # track_id=int(object_id),
                         x=int(xmin + (xmax - xmin) / 2),
                         y=int(ymin + (ymax - ymin) / 2),
                         width=int(xmax - xmin),
                         height=int(ymax - ymin),
                         keypoints=keypoints_yolo
                     ))
-                    logger.info(
-                        f"Объект {class_name} обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
-                              с вероятностью {box.conf[0].item()}"
-                    )
+                    # logger.info(
+                    #     f"Объект {class_name} c id  обнаружен на изображении с координатами: ({xmin}, {ymin}), ({xmax}, {ymax}),\
+                    #           с вероятностью {box.conf[0].item()}"
+                    # )
             frames.append(FrameDetection(
                 frame=frame_id, detections=frame_result))
+            logger.info(
+                f"Кадр {frame_id} обработан. Объектов на кадре: {len(frame_result)}"
+            )
             frame_id += 1
         cap.release()
         os.remove(path_to_video)
@@ -199,6 +211,7 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на изображении
         """
+        class_names = ['Standing', 'Lying']
         detected_objects = []
         for result in results:
             boxes = result.boxes
@@ -208,7 +221,7 @@ class ModelYolo:
                 xyxy = box.xyxy[0].tolist()
                 xmin, ymin, xmax, ymax = xyxy
                 cls_obj = box.cls[0].item()
-                class_name = self.model.names[int(cls_obj)]
+                class_name = class_names[int(cls_obj)]
                 current_keypoints = keypoints[i].xy[0].tolist()
                 # TODO: Выглядит колхозно, но работает. Нужно сделать лучше
                 keypoints_yolo = Keypoints_yolo_models(
