@@ -52,9 +52,13 @@
     source .venv/bin/activate
     ```
 3) Установите все зависимости в виртуальное окружение
-   - Через `pip` (для Linux/MacOS `pip3`)
+   - Через `pip` (рекомендовано) (для Linux/MacOS `pip3`). Если у вас нет видео карты от Nvidia, тогда используйте
    ```powershell
-   pip install -r requirements.txt
+   pip install -r requirements_cpu.txt
+   ```
+    Если есть видеокарта, тогда используйте
+   ```powershell
+   pip install -r requirements_gpu.txt
    ``` 
    - Через `uv`
    ```bash
