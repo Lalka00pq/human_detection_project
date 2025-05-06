@@ -41,7 +41,7 @@ class DetectorParams(BaseModel):
 class ClassesInfo(BaseModel):
     """Датакласс, описывающий названия классов"""
     classes_name: list = Field(
-        default=["Standing", "Falling"])
+        default=["Standing", "Lying"])
 
 
 class ServiceConfig(BaseModel):

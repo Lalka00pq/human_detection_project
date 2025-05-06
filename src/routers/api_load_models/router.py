@@ -1,8 +1,13 @@
-from fastapi import APIRouter, Request
+# python
+import time
+# project
 from src.tools.logging_tools import get_logger
 from src.routers.yolo_model_class import ModelYolo
-import time
 from src.schemas.service_config import ServiceConfig
+
+# 3rdparty
+from fastapi import APIRouter, Request
+
 router = APIRouter(tags=["Load Models"], prefix="")
 logger = get_logger()
 service_config_python = ServiceConfig.from_json_file(

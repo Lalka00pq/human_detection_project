@@ -1,3 +1,5 @@
+#python
+import time
 # project
 from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
@@ -44,11 +46,12 @@ async def inference(
     if use_cuda:
         model.change_device(
             device='cuda')
-
+    start = time.time()
     results = model.predict(image=image, conf=model.confidence)
 
     detected_objects = model.get_points(results=results)
-
+    end = time.time()
+    logger.info(f"Время выполнения инференса: {end - start}")
     if detected_objects is None:
         logger.info("Объекты не обнаружены")
         return DetectedAndClassifiedObject(object_bbox=None)

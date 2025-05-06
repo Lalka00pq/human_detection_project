@@ -4,8 +4,6 @@ from src.tools.logging_tools import get_logger
 from src.schemas.service_output import DetectionVideodataOutput
 # 3rdparty
 from fastapi import APIRouter, File, UploadFile, Request
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
 logger = get_logger()
 
 service_config_python = ServiceConfig.from_json_file(
@@ -26,9 +24,6 @@ async def inference(
     """Выполнение детекции на видео
 
     Args:
-        model_path (str): Путь к модели.
-        model_type (str): Формат модели (pt или onnx).
-        confidence (float): Уверенность при детекции.
         use_cuda (bool): Использовать ли GPU.
         video (UploadFile): Видео для детекции.
 
