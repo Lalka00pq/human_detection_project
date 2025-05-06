@@ -13,8 +13,6 @@ from fastapi import UploadFile, File
 import cv2
 
 logger = get_logger()
-
-
 class ModelYolo:
     """Класс моделей YOLO"""
 
@@ -43,10 +41,8 @@ class ModelYolo:
 
     def set_model_confidence(self, confidence: float) -> None:
         """Устанавливает уровень уверенности модели
-
         Args:
             confidence (float): Уверенность модели
-
         Returns:
             None
         """
@@ -57,12 +53,10 @@ class ModelYolo:
 
     def change_device(self, device: str = 'cpu') -> None:
         """Метод для изменения устройства модели
-
         Args:
             device (str, optional): Устройство для выполнения детекции('cuda' или 'cpu'). 
         Returns:
             None
-
         Raises:
             ValueError: Если устройство не поддерживается 
         """
@@ -191,6 +185,7 @@ class ModelYolo:
             logger.info(
                 f"Кадр {frame_id} обработан. Объектов на кадре: {len(frame_result)}"
             )
+            del frame_result
             frame_id += 1
         cap.release()
         os.remove(path_to_video)
