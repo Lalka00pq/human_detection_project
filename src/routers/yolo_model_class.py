@@ -13,6 +13,8 @@ from fastapi import UploadFile, File
 import cv2
 
 logger = get_logger()
+
+
 class ModelYolo:
     """Класс моделей YOLO"""
 
@@ -117,7 +119,7 @@ class ModelYolo:
         Returns:
             list | None: Список объектов, обнаруженных на видео
         """
-        # frame_skip = 5
+        frame_skip = 10
         class_names = ['Standing', 'Lying']
         cap = cv2.VideoCapture(path_to_video)
         if not cap.isOpened():
@@ -130,19 +132,19 @@ class ModelYolo:
             ret, frame = cap.read()
             if not ret:
                 break
-            # if frame_id % frame_skip != 0:
-            #     frame_id += 1
-            #     continue
-            detection = self.model.predict(
+            if frame_id % frame_skip != 0:
+                frame_id += 1
+                continue
+            detection = self.model.track(
                 frame, device=self.device, conf=self.confidence, verbose=False)
             frame_result = []
             for row in detection:
                 boxes = row.boxes
                 keypoints = row.keypoints
-                # ids = row.boxes.id
+                ids = row.boxes.id
                 for i in range(len(boxes)):
                     box = boxes[i]
-                    # object_id = ids[i]
+                    object_id = ids[i]
                     xyxy = box.xyxy[0].tolist()
                     xmin, ymin, xmax, ymax = xyxy
                     cls_obj = box.cls[0].item()
@@ -169,7 +171,7 @@ class ModelYolo:
                     )
                     frame_result.append(InferenceResult(
                         class_name=class_name,
-                        # track_id=int(object_id),
+                        track_id=int(object_id),
                         x=int(xmin + (xmax - xmin) / 2),
                         y=int(ymin + (ymax - ymin) / 2),
                         width=int(xmax - xmin),
