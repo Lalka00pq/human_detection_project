@@ -21,6 +21,13 @@ class GetClassesOutput(BaseModel):
     """Список классов"""
 
 
+class GetCheckModelLoaded(BaseModel):
+    """Датакласс для описания статуса загрузки модели"""
+
+    Model_loaded: bool
+    """True, если модель загружена, иначе False"""
+
+
 class Keypoints_yolo_models(BaseModel):
     """Модель для ключевых точек"""
     nose: List[float] | None = None

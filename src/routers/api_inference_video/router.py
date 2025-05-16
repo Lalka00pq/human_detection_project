@@ -2,6 +2,7 @@
 from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
 from src.schemas.service_output import DetectionVideodataOutput
+from src.routers.api_check_model_loaded.router import check_model_loaded
 # 3rdparty
 from fastapi import APIRouter, File, UploadFile, Request
 logger = get_logger()
@@ -30,10 +31,11 @@ async def inference(
     Returns:
         DetectedAndClassifiedObject | None: Pydantic модель объектов, обнаруженных на изображении.
     """
-    model = request.app.state.model
-    if model is None:
-        logger.error("Модель не загружена")
+    model_check = await check_model_loaded(request)
+    if model_check is False:
+        logger.info("Модель не загружена")
         return None
+    model = request.app.state.model
     logger.info(f"Используется модель {model.model_name}")
     if use_cuda:
         model.change_device(
