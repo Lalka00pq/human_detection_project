@@ -10,10 +10,9 @@ router = APIRouter(tags=["Model Loaded Check"])
     "/check_model_loaded",
     summary="Проверяет загружена ли модель",
     description="Проверяет загружена ли модель",
-    response_model=GetCheckModelLoaded,
     response_description="Датакласс с информацией о загруженности модели",
 )
-def check_model_loaded(request: Request) -> GetCheckModelLoaded:
+async def check_model_loaded(request: Request):
     """Проверяет загружена ли модель
 
     Args:
@@ -23,9 +22,5 @@ def check_model_loaded(request: Request) -> GetCheckModelLoaded:
         GetCheckModelLoaded: Датакласс с информацией о загруженности модели
     """
     if request.app.state.model is None:
-        return GetCheckModelLoaded(
-            Model_loaded=False,
-        )
-    return GetCheckModelLoaded(
-        Model_loaded=True,
-    )
+        return False
+    return True
