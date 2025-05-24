@@ -10,6 +10,7 @@ API_KEY = "S6J7LAS58C518q8Co4PfVZoDjkxAhYMp"
 
 @router.post("/background_description")
 def get_background_description(image: UploadFile = File(...)):
+    image.file.seek(0)
     image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB')
     buffer = io.BytesIO()
