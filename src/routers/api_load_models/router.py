@@ -23,6 +23,7 @@ async def load_model(
     model_path: str = service_config_python.detectors_params.detector_model_path,
     model_type: str = service_config_python.detectors_params.detector_model_format,
     confidence: float = service_config_python.detectors_params.confidence_threshold,
+    nms: float = service_config_python.detectors_params.nms_threshold,
 ):
     """ Метод для загрузки модели из файла.
 
@@ -40,6 +41,7 @@ async def load_model(
         device='cpu',
         model_type=model_type,
         confidence=confidence,
+        iou=nms,
     )
     end = time.time()
     logger.info(f"Модель загружена за {end - start} секунд")

@@ -47,7 +47,7 @@ async def inference(
         model.change_device(
             device='cuda')
     start = time.time()
-    results = model.predict(image=image, conf=model.confidence)
+    results = model.predict(image=image, conf=model.confidence, iou=model.iou)
 
     detected_objects = model.get_points(results=results)
     end = time.time()

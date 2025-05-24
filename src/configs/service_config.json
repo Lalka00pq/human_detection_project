@@ -3,7 +3,7 @@
 		"detector_name": "yolo11m-pose-100epochs",
 		"detector_model_format": "pt",
 		"detector_model_path": "./src/models/detectors/trained models/yolo11m-pose-100epochs",
-		"confidence_threshold": 0.25,
+		"confidence_threshold": 0.6,
 		"nms_threshold": 0.5,
 		"use_cuda": true
 	},

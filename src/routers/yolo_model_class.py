@@ -21,6 +21,7 @@ class ModelYolo:
     def __init__(self, model_path: str,
                  model_type: str,
                  confidence: float,
+                 iou: float = 0.7,
                  device: str = 'cpu',
                  ) -> None:
         """Инициализация модели YOLO
@@ -37,6 +38,7 @@ class ModelYolo:
         self.model = YOLO(self.model_path)
         self.model_type = model_type
         self.confidence = confidence
+        self.iou = iou
         logger.info(
             f"Модель {self.model_name} загружена и используется на устройстве {self.device}"
         )
@@ -78,7 +80,7 @@ class ModelYolo:
             f"Модель {self.model_name} переведена на устройство {device}"
         )
 
-    def predict(self, image: File, conf: float = 0.25) -> YOLO:
+    def predict(self, image: File, conf: float = 0.6, iou: float = 0.7) -> YOLO:
         """Метод для предсказания модели
 
         Args:
@@ -94,7 +96,7 @@ class ModelYolo:
                 image_for_detect, device=self.device, conf=conf, verbose=False)
         elif self.model_type == 'pt':
             results = self.model.predict(
-                source=image_for_detect, save=False, conf=conf, verbose=False, device=self.device)
+                source=image_for_detect, save=False, conf=conf, iou=iou, verbose=False, device=self.device)
         return results
 
     def load_video(self, video: UploadFile) -> str:
@@ -136,7 +138,7 @@ class ModelYolo:
                 frame_id += 1
                 continue
             detection = self.model.track(
-                frame, device=self.device, conf=self.confidence, verbose=False)
+                frame, device=self.device, conf=self.confidence, verbose=False, iou=self.iou)
             frame_result = []
             for row in detection:
                 boxes = row.boxes
