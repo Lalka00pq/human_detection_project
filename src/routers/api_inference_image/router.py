@@ -5,7 +5,6 @@ from src.schemas.service_config import ServiceConfig
 from src.tools.logging_tools import get_logger
 from src.schemas.service_output import DetectedAndClassifiedObject
 from src.routers.api_check_model_loaded.router import check_model_loaded
-from src.routers.api_background_description.router import get_background_description
 # 3rdparty
 from fastapi import APIRouter, File, UploadFile, Request
 
