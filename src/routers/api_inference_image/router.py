@@ -47,20 +47,20 @@ async def inference(
     if use_cuda:
         model.change_device(
             device='cuda')
-    results = model.predict(image=image, conf=model.confidence, iou=model.iou)
+    results, width, height = model.predict(image=image, conf=model.confidence, iou=model.iou)
     detected_objects = model.get_points(results=results)
     need_check = False
-    min_width = 50
-    min_height = 50
-    # max_width = image_width * 0.8
-    # max_height = image_height * 0.8
+    min_width = width * 0.2
+    min_height = height * 0.2
+    max_width = width * 0.8
+    max_height = height * 0.8
     if detected_objects is not None:
         for obj in detected_objects:
-            x, y, w, h = obj.x, obj.y, obj.width, obj.height
+            w, h = obj.width, obj.height
             keypoints = obj.keypoints
-            # if w < min_width or h < min_height or w > max_width or h > max_height:
-            #     need_check = True
-            #     break
+            if w < min_width or h < min_height or w > max_width or h > max_height:
+                need_check = True
+                break
             if keypoints and obj.class_name == "Standing":
                 if keypoints.left_shoulder and keypoints.right_shoulder and keypoints.left_hip and keypoints.right_hip:
                     shoulder_y = (keypoints.left_shoulder[1] + keypoints.right_shoulder[1]) / 2
@@ -75,6 +75,9 @@ async def inference(
                     if abs(shoulder_x - hip_x) < min_width:  
                         need_check = True
                         break
+    else:
+        if model.confidence < 0.6:
+            need_check = True
     end = time.time()
     
     logger.info(f"Время выполнения инференса: {end - start}")
