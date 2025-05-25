@@ -16,8 +16,6 @@ def get_background_description(image: UploadFile = File(...)):
     buffer = io.BytesIO()
     image_for_detect.save(buffer, format='JPEG')
     image_bytes = buffer.getvalue()
-        
-        
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
     image_url = f"data:image/jpeg;base64,{base64_image}"
     message = [

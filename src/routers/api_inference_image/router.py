@@ -37,6 +37,7 @@ async def inference(
     Returns:
         DetectedAndClassifiedObject | None: Pydantic модель объектов, обнаруженных на изображении.
     """
+    start = time.time()
     model_check = await check_model_loaded(request)
     if model_check is False:
         logger.info("Модель не загружена")
@@ -46,15 +47,38 @@ async def inference(
     if use_cuda:
         model.change_device(
             device='cuda')
-    start = time.time()
     results = model.predict(image=image, conf=model.confidence, iou=model.iou)
-
     detected_objects = model.get_points(results=results)
+    need_check = False
+    min_width = 50
+    min_height = 50
+    # max_width = image_width * 0.8
+    # max_height = image_height * 0.8
+    if detected_objects is not None:
+        for obj in detected_objects:
+            x, y, w, h = obj.x, obj.y, obj.width, obj.height
+            keypoints = obj.keypoints
+            # if w < min_width or h < min_height or w > max_width or h > max_height:
+            #     need_check = True
+            #     break
+            if keypoints and obj.class_name == "Standing":
+                if keypoints.left_shoulder and keypoints.right_shoulder and keypoints.left_hip and keypoints.right_hip:
+                    shoulder_y = (keypoints.left_shoulder[1] + keypoints.right_shoulder[1]) / 2
+                    hip_y = (keypoints.left_hip[1] + keypoints.right_hip[1]) / 2
+                    if abs(shoulder_y - hip_y) < min_height:
+                        need_check = True
+                        break
+            elif keypoints and obj.class_name == "Lying":
+                if keypoints.left_shoulder and keypoints.right_shoulder and keypoints.left_hip and keypoints.right_hip:
+                    shoulder_x = (keypoints.left_shoulder[0] + keypoints.right_shoulder[0]) / 2
+                    hip_x = (keypoints.left_hip[0] + keypoints.right_hip[0]) / 2
+                    if abs(shoulder_x - hip_x) < min_width:  
+                        need_check = True
+                        break
     end = time.time()
+    
     logger.info(f"Время выполнения инференса: {end - start}")
-    # response = get_background_description(image)
-    # logger.info(response)
     if detected_objects is None:
         logger.info("Объекты не обнаружены")
-        return DetectedAndClassifiedObject(object_bbox=None)
-    return DetectedAndClassifiedObject(object_bbox=detected_objects)
+        return DetectedAndClassifiedObject(object_bbox=None, check_image=need_check)
+    return DetectedAndClassifiedObject(object_bbox=detected_objects, check_image=need_check)

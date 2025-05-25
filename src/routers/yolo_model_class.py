@@ -91,6 +91,7 @@ class ModelYolo:
         """
         image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB')
+        
         if self.model_type == 'onnx':
             results = self.model(
                 image_for_detect, device=self.device, conf=conf, verbose=False)

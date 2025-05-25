@@ -1,5 +1,3 @@
-# project
-from src.schemas.service_output import GetCheckModelLoaded
 # 3rdparty
 from fastapi import APIRouter, Request
 

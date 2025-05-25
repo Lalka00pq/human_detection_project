@@ -21,13 +21,6 @@ class GetClassesOutput(BaseModel):
     """Список классов"""
 
 
-class GetCheckModelLoaded(BaseModel):
-    """Датакласс для описания статуса загрузки модели"""
-
-    Model_loaded: bool
-    """True, если модель загружена, иначе False"""
-
-
 class Keypoints_yolo_models(BaseModel):
     """Модель для ключевых точек"""
     nose: List[float] | None = None
@@ -90,6 +83,8 @@ class DetectedAndClassifiedObject(BaseModel):
     """ Датакласс данных которые будут возвращены сервисом (детекция и классификация) """
     object_bbox: List[InferenceResult] | None
     """ Координаты объекта """
+    check_image: bool = False
+    """ Проверка изображения """
 
 
 # Классы для работы с видео
