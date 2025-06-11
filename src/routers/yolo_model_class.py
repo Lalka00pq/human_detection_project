@@ -89,15 +89,17 @@ class ModelYolo:
         Returns:
             Keypoints_yolo_models: Ключевые точки модели
         """
+        
         image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB')
+        width, height = image_for_detect.size
         if self.model_type == 'onnx':
             results = self.model(
                 image_for_detect, device=self.device, conf=conf, verbose=False)
         elif self.model_type == 'pt':
             results = self.model.predict(
                 source=image_for_detect, save=False, conf=conf, iou=iou, verbose=False, device=self.device)
-        return results
+        return results, width, height
 
     def load_video(self, video: UploadFile) -> str:
         """Метод для загрузки видео

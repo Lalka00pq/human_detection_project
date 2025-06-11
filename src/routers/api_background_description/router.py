@@ -10,14 +10,20 @@ API_KEY = "S6J7LAS58C518q8Co4PfVZoDjkxAhYMp"
 
 @router.post("/background_description")
 def get_background_description(image: UploadFile = File(...)):
+    """Метод для получения описания фона
+
+    Args:
+        image (UploadFile): Изображение для описания фона.
+
+    Returns:
+        tuple[str, str]: Описание фона и изображение в формате base64.
+    """
     image.file.seek(0)
     image_for_detect = Image.open(
             io.BytesIO(image.file.read())).convert('RGB')
     buffer = io.BytesIO()
     image_for_detect.save(buffer, format='JPEG')
     image_bytes = buffer.getvalue()
-        
-        
     base64_image = base64.b64encode(image_bytes).decode('utf-8')
     image_url = f"data:image/jpeg;base64,{base64_image}"
     message = [
